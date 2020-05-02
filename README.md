@@ -1,8 +1,8 @@
-# try-gke
+# GKE step by step
 
-Launch a Kubernetes cluster on Google Kubernetes Engine, run a containerized web
-application, and then roll out a new version of the application across the
-cluster.
+- Launch a Kubernetes cluster on Google Kubernetes Engine
+- Run a containerized web application
+- Roll out a new version of the application across the cluster
 
 ## Setup
 
@@ -15,7 +15,6 @@ cluster.
    <a href="https://console.cloud.google.com/cloudshell" target="_blank">Cloud Shell</a>
    provides an environment with these tools preinstalled.
 
-For each step below, run the command in a terminal window.
 
 ## Step 1: Create a GCP project called "gke-demo".
 
@@ -28,7 +27,7 @@ Enter "Y" to use the recommended project id.
 
 Replace `[PROJECT-ID]` with the id returned in Step 1.
 
-```gcloud config set project [PROJECT-ID]```
+```gcloud config set project $(gcloud projects list --filter='name:gke-demo' --format='value(project_id)')```
 
 
 ## Step 3: Get your billing account ID.
