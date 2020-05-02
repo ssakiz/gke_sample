@@ -20,14 +20,18 @@
 
 Enter "Y" to use the recommended project id.
 
-```gcloud projects create --name=gke-demo```
+```
+gcloud projects create --name=gke-demo
+```
 
 
 ## Step 2: Set the project as the default for this session.
 
 Replace `[PROJECT-ID]` with the id returned in Step 1.
 
-```gcloud config set project $(gcloud projects list --filter='name:gke-demo' --format='value(project_id)')```
+```
+gcloud config set project $(gcloud projects list --filter='name:gke-demo' --format='value(project_id)')
+```
 
 
 ## Step 3: Get your billing account ID.
