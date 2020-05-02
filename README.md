@@ -1,4 +1,4 @@
-# GKE step-by-step
+# GKE step-by-step SEMIH
 
 - Launch a Kubernetes cluster on Google Kubernetes Engine
 - Run a containerized web application
