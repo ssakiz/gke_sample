@@ -3,7 +3,7 @@
 > If your `README` has a lot of info, section headers might be nice.
 
 - [Installation](#installation)
-- [Test](#tests)
+- [Test](#Tests (Optional))
 - [Contributing](#contributing)
 
 
