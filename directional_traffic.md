@@ -9,8 +9,9 @@
 
 
 ### Tutorial step-by-step repositories
-[React](https://github.com/meteor/react)
-[This is an absolute link to a nested folder](https://github.com/ssakiz/gke_sample/react)
+[React](https://github.com/ssakiz/gke_sample/tree/master/react)
+
+
 ---
 
 ## Example (Optional)
