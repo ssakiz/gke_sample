@@ -1,148 +1,88 @@
 ---
-title: "Allow Directional Traffic"
-date: 2018-08-07T08:30:11-07:00
-weight: 4
+title: "Creating and Deploying Secrets"
+date: 2019-04-09T00:00:00-03:00
+weight: 10
+draft: false
 ---
-Let's see how we can allow directional traffic from client to frontend, and from frontend to backend.
 
-Copy/Paste the following commands into your Cloud9 Terminal.
-```
-cd ~/environment/calico_resources
-wget https://eksworkshop.com/beginner/120_network-policies/calico/stars_policy_demo/directional_traffic.files/backend-policy.yaml
-wget https://eksworkshop.com/beginner/120_network-policies/calico/stars_policy_demo/directional_traffic.files/frontend-policy.yaml
-```
-
-Let's examine this backend policy with `cat backend-policy.yaml`:
+Since 1.14, Kubectl supports the management of Kubernetes objects using Kustomize. [Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize) provides resource Generators to create Secrets and ConfigMaps. The Kustomize generators should be specified in a **kustomization.yaml** file. A Kustomize file for generating a Secret from literal key-value pairs looks as follows:
 {{< output >}}
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
+namespace: octank
+secretGenerator:
+- name: database-credentials
+  literals:
+  - username=admin
+  - password=Tru5tN0!
+generatorOptions:
+  disableNameSuffixHash: true
+{{< /output >}}
+
+Run the following set of commands to generate a Secret using Kubectl and Kustomize.
+```
+mkdir -p ~/environment/secrets
+cd ~/environment/secrets
+wget https://eksworkshop.com/beginner/200_secrets/secrets.files/kustomization.yaml
+kubectl kustomize . > secret.yaml
+```
+
+The generated Secret with base64 encoded value for *username* and *password* keys is as follows:
+{{< output >}}
+apiVersion: v1
+kind: Secret
+type: Opaque
 metadata:
-  namespace: stars
-  name: backend-policy
-spec:
-  podSelector:
-    matchLabels:
-      role: backend
-  ingress:
-    - from:
-        - <EDIT: UPDATE WITH THE CONFIGURATION NEEDED TO WHITELIST FRONTEND USING PODSELECTOR>
-      ports:
-        - protocol: TCP
-          port: 6379
+  name: database-credentials
+  namespace: octank
+data:
+  password: VHJ1NXROMCE=
+  username: YWRtaW4=
 {{< /output >}}
-#### Challenge:
-**After reviewing the manifest, you'll see we have intentionally left few of the configuration fields for you to EDIT. Please edit the configuration as suggested. You can find helpful info in this [Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/network-policies/)**
 
-{{% expand "Expand here to see the solution"%}}
+
+You can now deploy this Secret to your EKS cluster.
+```
+kubectl create namespace octank
+kubectl apply -f secret.yaml
+```
+
+#### Exposing Secrets as Environment Variables
+You may expose the keys, namely, *username* and *password*, in the **database-credentials** Secret to a Pod as environment variables using a Pod manifest as shown below:
 {{< output >}}
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
+apiVersion: v1
+kind: Pod
 metadata:
-  namespace: stars
-  name: backend-policy
+  name: someName
+  namespace: someNamespace
 spec:
-  podSelector:
-    matchLabels:
-      role: backend
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              role: frontend
-      ports:
-        - protocol: TCP
-          port: 6379
-{{< /output >}}
-{{%/expand%}}
-
-Let's examine the frontend policy with `cat frontend-policy.yaml`:
-
-{{< output >}}
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  namespace: stars
-  name: frontend-policy
-spec:
-  podSelector:
-    matchLabels:
-      role: frontend
-  ingress:
-    - from:
-        - <EDIT: UPDATE WITH THE CONFIGURATION NEEDED TO WHITELIST CLIENT USING NAMESPACESELECTOR>
-      ports:
-        - protocol: TCP
-          port: 80
-{{< /output >}}
-#### Challenge:
-**Please edit the configuration as suggested. You can find helpful info in this [Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/network-policies/)**
-
-{{% expand "Expand here to see the solution"%}}
-{{< output >}}
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  namespace: stars
-  name: frontend-policy
-spec:
-  podSelector:
-    matchLabels:
-      role: frontend
-  ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              role: client
-      ports:
-        - protocol: TCP
-          port: 80
-{{< /output >}}
-{{%/expand%}}
-To allow traffic from frontend service to the backend service apply the following manifest:
-
-```
-kubectl apply -f backend-policy.yaml
-```
-
-And allow traffic from the client namespace to the frontend service:
-
-```
-kubectl apply -f frontend-policy.yaml
-```
-Upon refreshing your browser, you should be able to see the network policies in action:
-
-![directional traffic](/images/calico-client-f-b-access.png)
-
-Let's have a look at the backend-policy. Its spec has a podSelector that selects all pods with the label **role:backend**, and allows ingress from all pods that have the label **role:frontend** and on TCP port **6379**, but not the other way round. Traffic is allowed in one direction on a specific port number.
-
-{{< output >}}
-spec:
-  podSelector:
-    matchLabels:
-      role: backend
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              role: frontend
-      ports:
-        - protocol: TCP
-          port: 6379
+  containers:
+  - name: someContainer
+    image: someImage
+    env:
+    - name: DATABASE_USER
+      valueFrom:
+        secretKeyRef:
+          name: database-credentials
+          key: username
+    - name: DATABASE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: database-credentials
+          key: password 
 {{< /output >}}
 
-The frontend-policy is similar, except it allows ingress from **namespaces** that have the label **role: client** on TCP port **80**.
+Run the following set of commands to deploy a pod that references the **database-credentials** Secret created above.
+```
+wget https://eksworkshop.com/beginner/200_secrets/secrets.files/pod-variable.yaml
+kubectl apply -f pod-variable.yaml
+kubectl get pod -n octank
+```
 
+View the output logs from the pod to verfiy that the environment variables *DATABASE_USER* and *DATABASE_PASSWORD* have been assigned the expected literal values
+```
+kubectl logs pod-variable -n octank
+```
+The output should look as follows:
 {{< output >}}
-spec:
-  podSelector:
-    matchLabels:
-      role: frontend
-  ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              role: client
-      ports:
-        - protocol: TCP
-          port: 80
+DATABASE_USER = admin
+DATABASE_PASSWROD = Tru5tN0!
 {{< /output >}}
