@@ -1,4 +1,5 @@
 # GKE step-by-step SEMIH / BURCU SAKIZ
+CORRONA !!!
 
 - Launch a Kubernetes cluster on Google Kubernetes Engine
 - Run a containerized web application
