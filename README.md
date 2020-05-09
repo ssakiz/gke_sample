@@ -2,14 +2,11 @@
 
 > If your `README` has a lot of info, section headers might be nice.
 
-- [Installation](#installation)
+- [Installation](https://github.com/ssakiz/gke_sample/tree/master/installation)
 - [Features](#features)
 - [Contributing](#contributing)
 
 
-
-### Tutorial step-by-step repositories
-[React](https://github.com/ssakiz/gke_sample/tree/master/react)
 
 
 ---
