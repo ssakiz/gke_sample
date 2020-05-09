@@ -1,4 +1,4 @@
-# GKE step-by-step SEMIH SAKIZ
+# GKE step-by-step SEMIH / BURCU SAKIZ
 
 - Launch a Kubernetes cluster on Google Kubernetes Engine
 - Run a containerized web application
