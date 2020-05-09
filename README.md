@@ -1,180 +1,78 @@
-# GKE step-by-step SEMIH / BURCU SAKIZ
-CORRONA !!!
+[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/aws-samples/eks-workshop) 
 
-- Launch a Kubernetes cluster on Google Kubernetes Engine
-- Run a containerized web application
-- Roll out a new version of the application across the cluster
+master branch: ![Build Status](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiUmYrQzlvK2JVYWloK3N5NFh5WUZNS1duYUtVeFN2eWJLNk9VdU9NdzdDdGtobldPcHBKYjdVQ0YxV0NQLzRZeXhWbkJVTkc2Ymd2TEpJblNYb1BraXFNPSIsIml2UGFyYW1ldGVyU3BlYyI6IjRObVVDcVUyb3JJUEFYQTciLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
 
-## Setup
+# eksworkshop
 
-1. You will need a Google Cloud Platform account with an active billing account.
-   If you don't have one, you can sign up for a free trial to get $300 worth of
-   GCP credits, which are valid for 12 months, at
-   <a href="https://cloud.google.com/free/" target="_blank">https://cloud.google.com/free/</a>.
+### Setup:
+#### Using GitPod.io:
 
-2. This tutorial requires the `kubectl` and `gcloud` command-line tools.
-   <a href="https://console.cloud.google.com/cloudshell" target="_blank">Cloud Shell</a>
-   provides an environment with these tools preinstalled.
+This is how I set up my environment:
+(I am using gitpod.io for editing)
 
+1. fork the repo to your own github account
+2. prepend `gitpod.io#` to the beginning of your github url. Mine becomes: `https://gitpod.io#github.com/brentley/eks-workshop`
+3. once gitpod has started, in the terminal, run `npm install && npm run theme`
+This will install the dependencies and clone the theme submodule.
 
-## Step 1: Create a GCP project called "gke-demo".
+From here, you can use the online IDE to edit /content/chapter/filename.md...
+If you want to preview your edits, in the terminal, run:
+`npx hugo server`.
+That will start the local hugo server.
 
-Enter "Y" to use the recommended project id.
+A dialog box will pop up telling you "A service is listening on port 1313, but is not
+exposed." -- press the expose button. After that, choose "open browser" to get a new
+tab with your preview site. As you save edits, this tab should refresh.
 
-```
-gcloud projects create --name=gke-demo
-```
+When you're happy with your edits, commit, push, and open a pull request to the upstream
+repo's master branch. Once merged, the preview site (linked above) will be refreshed.
 
+#### On a Mac:
+Install Hugo:
+`brew install hugo`
 
-## Step 2: Set the project as the default for this session.
+#### On Linux:
+  - Download from the releases page: https://github.com/gohugoio/hugo/releases/tag/v0.64.1
+  - Extract and save the executable to `/usr/local/bin`
 
-Replace `[PROJECT-ID]` with the id returned in Step 1.
+#### Clone this repo:
+From wherever you checkout repos:
+`git clone git@github.com:aws-samples/eks-workshop.git` (or your fork)
 
-```
-gcloud config set project $(gcloud projects list --filter='name:gke-demo' --format='value(project_id)')
-```
+#### Clone the theme submodule:
+`cd eks-workshop`
 
+`git submodule init` ;
+`git submodule update`
 
-## Step 3: Get your billing account ID.
+#### Install Node.js and npm:
+You can follow instructions from npm website: https://www.npmjs.com/get-npm
 
-Make a note of the billing account ID in the format XXXXXX-XXXXXX-XXXXXX. If you
-see 0 items listed, you can sign up for the
-<a href="https://cloud.google.com/free/" target="_blank">Free Trial</a>
-to get $300 worth of GCP credits, which are valid for 12 months.
+#### Install node packages:
+`npm install`
 
-```gcloud alpha billing accounts list```
+#### Run Hugo locally:
+`npm run server`
+or
+`npm run drafts` to see stubbed in draft pages.
 
+`npm run build` will build your content locally and output to `./public/`
 
-## Step 4: Enable billing for your project.
+`npm run test` will test the built content for bad links
 
-Replace `[ACCOUNT-ID]` with the id from step 3.
+#### View Hugo locally:
+Visit http://localhost:8080/ to see the site.
 
-```gcloud beta billing projects link [PROJECT-ID] --billing-account=[ACCOUNT-ID]```
+#### Making Edits:
+As you save edits to a page, the site will live-reload to show your changes.
 
+#### Auto Deploy:
+Any commits to master will auto build and deploy in a couple of minutes. You can see the currently
+deployed hash at the bottom of the menu panel.
 
-## Step 5: Enable APIs for your project.
+Any commits to a branch will auto build and deploy in a couple of minutes to a custom route named with the branch name. You can see the currently
+deployed hash at the bottom of the menu panel.
+An example is the "jenkinsworld" branch would be deployed to https://eksworkshop.com/jenkinsworld/
 
-This tutorial requires both the Compute Engine API and Kubernetes Engine API.
-This may take a couple of minutes to complete.
+note: shift-reload may be necessary in your browser to reflect the latest changes.
 
-```
-gcloud services enable compute.googleapis.com; gcloud services enable container.googleapis.com
-```
-
-
-## Step 6: Create a cluster named "demo-1" in GCP zone us-central1-b.
-
-Creating the cluster may take a few minutes.
-
-```
-gcloud container clusters create demo-1 -z us-central1-b
-```
-
-## Step 7: Deploy a web application from a container image.
-
-A sample container image, `gcr.io/google-samples/hello-app:1.0`, is stored in
-Google Container Registry.
-
-```
-kubectl run web-app --image gcr.io/google-samples/hello-app:1.0 --port 8080
-```
-
-
-## Step 8: View the pods that were created.
-
-Re-run this command at any time to view the current pod state.
-
-```
-kubectl get pods
-```
-
-
-## Step 9: Scale the deployment across three replicas to add redundancy.
-
-```
-kubectl scale deployment web-app --replicas 3; kubectl get pods
-```
-
-
-## Step 10: Create an external load balancer Service for the web application.
-
-```
-kubectl expose deployment web-app --port=80 --target-port=8080 --type=LoadBalancer
-```
-
-
-## Step 11: Retrieve information about the web-app service.
-
-Make a note of the external IP address that is returned. If the external IP
-address is pending, wait a few moments and then re-run the command.
-
-```
-kubectl get service web-app
-```
-
-
-## Step 12: Make a request to the application.
-
-Replace `[IP-ADDRESS]` with the external IP address returned in the previous step.
-
-```
-curl http://[IP-ADDRESS]
-```
-
-## Step 13: Deploy a new version of the web application from Google Container Registry.
-
-```
-kubectl set image deployment web-app web-app=gcr.io/google-samples/hello-app:2.0; watch kubectl get pods
-```
-
-## Step 14: Watch the changes roll out.
-
-Kubernetes will terminate the old pods and re-launch them with the new version.
-Appending the `watch` command to **Step 13** ensures that the watch window has
-time to open before the deployment completes.
-
-When the changes are complete, click Ctrl+C to return to the main terminal.
-
-## Step 15: Confirm the new version (v2.0.0) has been deployed.
-
-```
-curl http://[IP-ADDRESS]
-```
-
-## Step 16: Delete the Deployment and Service.
-
-This prevents further charges from accruing to your GCP account.
-
-```
-kubectl delete services,deployment web-app
-```
-
-Wait about 30 seconds for the Load Balancer to finish deleting in the
-background, then move to the next step.
-
-## Step 17: Delete the cluster.
-
-This deletes the cluster and its nodes hosted on Compute Engine.
-
- ```
- gcloud container clusters delete demo-1 --zone us-central1-b
- ```
-
-## Step 18: Delete the project you created.
-
-Replace `[PROJECT-ID]` with the id returned in Step 1. This prevents further
-charges from accruing to your GCP account.
-
-```
-gcloud projects delete [PROJECT-ID]
-```
-
---------------------
-FURTHER EXPLORATION:
-
- * [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine/)
- * [GKE tutorials](https://cloud.google.com/kubernetes-engine/docs/tutorials)
- * [Kubernetes comic](https://cloud.google.com/kubernetes-engine/kubernetes-comic/)
- * [Kubernetes documentation](https://kubernetes.io/docs/)
- * [kubectl command syntax](https://kubernetes.io/docs/user-guide/kubectl-overview/)
---------------------
